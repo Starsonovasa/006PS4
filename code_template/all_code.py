@@ -97,8 +97,76 @@ def reachable_states(start, transitions):
 # Returns either a path as a list of reachable states if the target is
 # reachable or False if the target isn't reachable.
 def simple_machine(k, start, target):
-    # TODO: Implement part b.
-    pass
+    rules = [(1,1,1),(-1,-1,-1), (1,0,0), (-1,0,0)]
+    def transitions(start, rules, limit = -1):
+        transitions_list = []
+        
+        #Default value is -1, no upper bound on the value for each component of the 
+        #intial or final state
+        if limit <= -1:
+            for rule in rules:
+                final = (start[0]+rule[0], start[1]+rule[1], start[2]+rule[2])
+                transitions_list.append((start,final))
+            return transitions_list
+        
+        #Otherwise, every component of the inital and final state must be below the limit
+        else:
+            #If any component of the start state is above the limit, then it already violated
+            #our precondition
+            for component in start:
+                if component > limit:
+                    return transitions_list
+                    
+            
+            for rule in rules:
+                final = (start[0]+rule[0], start[1]+rule[1], start[2]+rule[2])
+                above_limit = False
+                
+                #If any component of the final state after the transition is above the limit,
+                #then it is not reachable
+                for component in final:
+                    if component > limit:
+                        above_limit = True
+                
+                if not(above_limit):
+                    transitions_list.append((start, final))
+        return transitions_list
+    
+    #BFS
+    frontier = []
+    frontier.append(start)
+    parent = {}
+    visited = set()
+    
+    parent[start] = None
+    
+    while(len(frontier) > 0):
+        current_state = frontier.pop(0)
+        transitions = transitions(current_state, rules, k)
+        reachable = reachable_states(current_state, transitions)
+        
+        for single_length_path in reachable:
+            destination = single_length_path[0]
+            parent[destination] = single_length_path[2]
+            if destination ==  target:
+                return shortest_path(destination, parent)
+            
+            if destination not in visited:
+                visited.add(destination)
+                frontier.append(destination)
+    
+    return False
+    
+    def shortest_path(destination, parent_dict):
+        frontier = []
+        frontier.append(destination)
+        list_in_reverse = []
+        while (frontier[0] != None) and (len(frontier) > 0):
+            current_node = frontier.pop(0)
+            list_in_reverse.append(current_node)
+            frontier.append(parent[current_node])
+        return list_in_reverse.reverse()
+    
 
 # Returns either False if the mutual exclusion property is satisfied or
 # a minimum-length counterexample as a list of reachable states.
